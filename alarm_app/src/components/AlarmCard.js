@@ -1,23 +1,30 @@
 import React from "react";
-import { View, Text, StyleSheet, Switch } from "react-native";
+import { View, Text, StyleSheet, Switch, Pressable } from "react-native";
 import { colors } from "../theme/colors";
-import { spacing } from "../theme/spacing";
 
-function DayMiniRow({ active = [] }) {
-  const DAYS = ["S", "M", "T", "W", "T", "F", "S"];
+const DAYS = ["S", "M", "T", "W", "T", "F", "S"];
+
+function DayMiniRow({ active = [], enabled }) {
   return (
-    <View style={stylesMini.row}>
+    <View style={styles.dayRow}>
       {DAYS.map((d, idx) => {
         const isActive = active.includes(idx);
         return (
           <View
             key={`${d}-${idx}`}
             style={[
-              stylesMini.dot,
-              isActive ? stylesMini.dotActive : stylesMini.dotInactive,
+              styles.dayDot,
+              isActive && enabled && styles.dayDotActive,
             ]}
           >
-            <Text style={[stylesMini.text, isActive ? stylesMini.textActive : stylesMini.textInactive]}>
+            <Text
+              style={[
+                styles.dayText,
+                isActive && enabled
+                  ? styles.dayTextActive
+                  : styles.dayTextInactive,
+              ]}
+            >
               {d}
             </Text>
           </View>
@@ -35,91 +42,131 @@ export default function AlarmCard({
   inText,
   daysActive = [],
   onToggle,
+  onPress,
 }) {
   return (
-    <View style={styles.card}>
+    <Pressable
+      onPress={onPress}
+      android_ripple={{ color: "rgba(0,0,0,0.06)" }}
+      style={({ pressed }) => [
+        styles.card,
+        !enabled && styles.cardDisabled,
+        pressed && { transform: [{ scale: 0.995 }] },
+      ]}
+    >
       <View style={styles.topRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.label}>{label.toUpperCase()}</Text>
-        </View>
+        <Text style={styles.label}>{label.toUpperCase()}</Text>
 
         <Switch
           value={enabled}
           onValueChange={onToggle}
-          trackColor={{ false: "rgba(35,61,77,0.10)", true: colors.pumpkin }}
+          trackColor={{
+            false: "rgba(35,61,77,0.12)",
+            true: colors.pumpkin,
+          }}
           thumbColor={colors.white}
         />
       </View>
 
       <View style={styles.timeRow}>
-        <Text style={[styles.time, !enabled && styles.disabled]}>{time}</Text>
-        <Text style={[styles.ampm, !enabled && styles.disabled]}>{ampm}</Text>
+        <Text style={styles.time}>{time}</Text>
+        <Text style={styles.ampm}>{ampm}</Text>
       </View>
 
-      <View style={{ height: spacing.md }} />
+      <DayMiniRow active={daysActive} enabled={enabled} />
 
-      <DayMiniRow active={daysActive} />
-
-      <View style={{ height: spacing.sm }} />
-
-      <Text style={[styles.inText, !enabled && styles.disabled]}>{inText}</Text>
-    </View>
+      <Text style={styles.inText}>{inText}</Text>
+    </Pressable>
   );
 }
-
-const stylesMini = StyleSheet.create({
-  row: { flexDirection: "row", gap: 12, alignItems: "center" },
-  dot: { width: 22, height: 22, borderRadius: 11, alignItems: "center", justifyContent: "center" },
-  dotActive: { backgroundColor: colors.pumpkin },
-  dotInactive: { backgroundColor: "transparent" },
-  text: { fontSize: 12, fontWeight: "700" },
-  textActive: { color: colors.white },
-  textInactive: { color: "rgba(35,61,77,0.35)" },
-});
 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.card,
-    borderRadius: 22,
-    padding: spacing.lg,
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 22,
+    minHeight: 160,
+
     shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 3,
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 14 },
+    elevation: 6,
   },
+  cardDisabled: {
+    opacity: 0.45,
+  },
+
   topRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
   },
+
   label: {
     color: colors.muted,
     fontWeight: "800",
-    letterSpacing: 1,
+    letterSpacing: 1.2,
     fontSize: 12,
   },
+
   timeRow: {
     flexDirection: "row",
     alignItems: "flex-end",
-    gap: 8,
-    marginTop: 8,
+    marginTop: 10,
+    marginBottom: 18,
   },
+
   time: {
-    fontSize: 42,
+    fontSize: 46,
     fontWeight: "800",
     color: colors.charcoal,
+    letterSpacing: -1.5,
   },
+
   ampm: {
     fontSize: 16,
     fontWeight: "800",
     color: colors.charcoal,
+    marginLeft: 8,
     paddingBottom: 8,
   },
-  inText: {
-    color: colors.muted,
-    fontWeight: "600",
+
+  dayRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 14,
   },
-  disabled: {
-    opacity: 0.35,
+
+  dayDot: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  dayDotActive: {
+    backgroundColor: colors.pumpkin,
+  },
+
+  dayText: {
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  dayTextActive: {
+    color: colors.white,
+  },
+
+  dayTextInactive: {
+    color: "rgba(35,61,77,0.35)",
+  },
+
+  inText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.muted,
   },
 });
