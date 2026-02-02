@@ -16,3 +16,8 @@ export async function loadAlarms() {
 export async function saveAlarms(alarms) {
   await AsyncStorage.setItem(KEY, JSON.stringify(alarms));
 }
+
+export async function getAlarmById(id) {
+  const alarms = await loadAlarms();
+  return alarms.find((a) => a.id === id) ?? null;
+}

@@ -1,24 +1,41 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+import React, { useEffect } from "react";
+import { Stack, useRouter } from "expo-router";
+import * as Notifications from "expo-notifications";
+import { requestPermissions } from "../src/alarms/notificationService";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const router = useRouter();
+
+  useEffect(() => {
+    requestPermissions();
+
+    const subReceive = Notifications.addNotificationReceivedListener((n) => {
+      const alarmId = n.request.content.data?.alarmId;
+      if (alarmId) {
+        // Foreground: auto-open ring screen
+        router.push({ pathname: "/ring", params: { alarmId: String(alarmId) } });
+      }
+    });
+
+    const subResponse =
+      Notifications.addNotificationResponseReceivedListener((resp) => {
+        const alarmId = resp.notification.request.content.data?.alarmId;
+        if (alarmId) {
+          // Background/tapped: open ring screen
+          router.push({ pathname: "/ring", params: { alarmId: String(alarmId) } });
+        }
+      });
+
+    return () => {
+      subReceive.remove();
+      subResponse.remove();
+    };
+  }, [router]);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="ring" />
+    </Stack>
   );
 }
